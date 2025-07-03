@@ -1,0 +1,71 @@
+# version: "3.9"
+
+# services:
+#   db:
+#     image: postgres:15
+#     restart: always
+#     environment:
+#       POSTGRES_USER: gp_user
+#       POSTGRES_PASSWORD: gp_pass
+#       POSTGRES_DB: weather_db
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#     healthcheck:
+#       test: [ "CMD-SHELL", "pg_isready -U gp_user" ]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 10
+
+#   app:
+#     build: .
+#     env_file:
+#       - .env # ✅ Use .env to load DATABASE_URL and others
+#     depends_on:
+#       - db
+#     ports:
+#       - "8000:8000"
+#     volumes:
+#       - .:/app
+#     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# volumes:
+#   pgdata:
+
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: gp_user
+      POSTGRES_PASSWORD: gp_pass
+      POSTGRES_DB: weather_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U gp_user -d weather_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+volumes:
+  pgdata:
